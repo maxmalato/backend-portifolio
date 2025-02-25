@@ -1,14 +1,6 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
-
-type Feedback = {
-    id: number;
-    name: string;
-    comment: string;
-    createdAt: Date;
-    updatedAt: Date;
-}
 
 const app = express();
 const prisma = new PrismaClient();
@@ -16,7 +8,7 @@ app.use(cors());
 app.use(express.json());
 
 // Rota para listar todos os feedbacks
-app.get('/feedbacks', async (req: Request, res: Response) => {
+app.get('/feedbacks', async (req, res) => {
     const feedbacks = await prisma.feedback.findMany({
         orderBy: {
             createdAt: 'desc'
@@ -26,7 +18,7 @@ app.get('/feedbacks', async (req: Request, res: Response) => {
 });
 
 // Rota para criar um feedback
-app.post('/feedbacks', async (req: Request<{}, {}, { name: string; comment: string }>, res: Response) => {
+app.post('/feedbacks', async (req, res) => {
     const { name, comment } = req.body;
 
     if (!name || !comment) {
@@ -45,7 +37,7 @@ app.post('/feedbacks', async (req: Request<{}, {}, { name: string; comment: stri
 });
 
 // Rota para atualizar um feedback
-app.put('/feedbacks/:id', async (req: Request, res: Response) => {
+app.put('/feedbacks/:id', async (req, res) => {
     const { id } = req.params;
     const { name, comment } = req.body;
 
@@ -113,4 +105,10 @@ app.delete('/feedbacks/:id', async (req, res) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
+});
+
+// Encerra a conexão com o banco de dados ao finalizar o servidor
+process.on('SIGINT', async () => {
+    await prisma.$disconnect();
+    process.exit();
 });
