@@ -1,8 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
-import { format } from "date-fns"
-import { ptBR } from "date-fns/locale"
 
 const app = express();
 const prisma = new PrismaClient();
@@ -21,8 +19,8 @@ app.get('/feedbacks', async (req, res) => {
         const formattedFeedbacks = feedbacks.map(feedback => {
             return {
                 ...feedback,
-                createdAt: format(new Date(feedback.createdAt), "dd 'de' MMMM 'de' yyyy HH:mm:ss", { locale: ptBR }),
-                updatedAt: feedback.updatedAt ? format(new Date(feedback.updatedAt), "dd 'de' MMMM 'de' yyyy HH:mm:ss", { locale: ptBR }) : null
+                createdAt,
+                updatedAt
             }
         });
 
