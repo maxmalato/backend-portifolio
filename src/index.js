@@ -7,25 +7,26 @@ const prisma = new PrismaClient();
 app.use(cors());
 app.use(express.json());
 
+// Middleware para desconectar o Prisma Client ao finalizar a resposta
+app.use(async (req, res, next) => {
+    res.on('finish', async () => {
+        await prisma.$disconnect();
+    });
+    next();
+});
+
 // Rota para listar todos os feedbacks
 app.get('/feedbacks', async (req, res) => {
     try {
         const feedbacks = await prisma.feedback.findMany({
             orderBy: {
-                createdAt: 'asc'
+                createdAt: 'desc'
             }
         });
 
-        const formattedFeedbacks = feedbacks.map(feedback => {
-            return {
-                ...feedback,
-                createdAt,
-                updatedAt
-            }
-        });
-
-        res.json(formattedFeedbacks);
+        res.json(feedbacks);
     } catch (error) {
+        console.error(error)
         res.status(500).json({
             error: 'Não foi possível listar os feedbacks.'
         });
