@@ -10,6 +10,7 @@ datasource db {
 
 model Feedback {
   id        Int      @id @default(autoincrement())
+  userId    String
   name      String
   comment   String
   createdAt DateTime @default(now())

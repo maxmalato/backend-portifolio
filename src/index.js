@@ -20,41 +20,40 @@ app.get('/feedbacks', async (req, res) => {
     try {
         const feedbacks = await prisma.feedback.findMany({
             orderBy: {
-                createdAt: 'desc'
+                createdAt: 'asc'
             }
         });
 
         res.json(feedbacks);
     } catch (error) {
         console.error(error)
-        res.status(500).json({
-            error: 'Não foi possível listar os feedbacks.'
-        });
+        res.status(500).json('Não foi possível listar os feedbacks.');
     }
 });
 
 // Rota para criar um feedback
 app.post('/feedbacks', async (req, res) => {
     try {
-        const { name, comment } = req.body;
+        const { userId, name, comment } = req.body;
 
-        if (!name || !comment) {
+        if (!userId || !name || !comment) {
             return res.status(400).json({
-                error: 'Nome e comentário são obrigatórios.'
+                error: 'O ID do usuário, nome e comentário são obrigatórios.'
             });
         }
 
         const newFeedback = await prisma.feedback.create({
             data: {
+                userId,
                 name,
                 comment
             }
         });
+
         res.status(201).json(newFeedback);
     } catch (error) {
-        res.status(500).json({
-            error: 'Não foi possível criar o feedback.'
-        });
+        console.error(error);
+        res.status(500).json('Não foi possível criar o feedback.');
     }
 });
 
@@ -62,13 +61,11 @@ app.post('/feedbacks', async (req, res) => {
 app.put('/feedbacks/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, comment } = req.body;
+        const { userId, comment } = req.body;
 
         // Encontra o feedback existente pelo ID
         const existingFeedback = await prisma.feedback.findUnique({
-            where: {
-                id: Number(id)
-            }
+            where: { id: Number(id)}
         });
 
         // Verifica se o feedback existe
@@ -78,10 +75,9 @@ app.put('/feedbacks/:id', async (req, res) => {
             });
         }
 
-        // Verifica se o nome do feedback é o mesmo do usuário que está tentando editar
-        if (existingFeedback.name !== name) {
+        if(existingFeedback.userId !== userId) {
             return res.status(403).json({
-                error: 'Você só pode editar os seus próprios comentários.'
+                error: 'Você só pode atualizar os seus próprios comentários.'
             })
         }
 
@@ -95,9 +91,8 @@ app.put('/feedbacks/:id', async (req, res) => {
         });
         res.json(updateFeedback);
     } catch (error) {
-        res.status(500).json({
-            error: 'Não foi possível atualizar o feedback.'
-        });
+        console.error(error);
+        res.status(500).json('Não foi possível atualizar o feedback.');
     }
 });
 
@@ -105,6 +100,7 @@ app.put('/feedbacks/:id', async (req, res) => {
 app.delete('/feedbacks/:id', async (req, res) => {
     try {
         const { id } = req.params;
+        const { userId } = req.body;
 
         // Encontra o feedback existente pelo ID
         const existingFeedback = await prisma.feedback.findUnique({
@@ -120,6 +116,12 @@ app.delete('/feedbacks/:id', async (req, res) => {
             });
         }
 
+        if(existingFeedback.userId !== userId) {
+            return res.status(403).json({
+                error: 'Você só pode deletar os seus próprios comentários.'
+            });
+        };
+
         await prisma.feedback.delete({
             where: {
                 id: Number(id)
@@ -129,9 +131,8 @@ app.delete('/feedbacks/:id', async (req, res) => {
             message: 'Comentário deletado com sucesso.'
         });
     } catch (error) {
-        res.status(500).json({
-            error: 'Não foi possível deletar o feedback.'
-        });
+        console.error(error);
+        res.status(500).json('Não foi possível deletar o feedback.');
     }
 });
 
